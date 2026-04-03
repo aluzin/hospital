@@ -1,6 +1,8 @@
 using Hospital.Application.Patients.Models;
+using Hospital.Application.Patients.SearchPatients;
 using Hospital.Domain.Enums;
 using ApplicationCreatePatientRequest = Hospital.Application.Patients.CreatePatient.CreatePatientRequest;
+using ApplicationSearchPatientsRequest = Hospital.Application.Patients.SearchPatients.SearchPatientsRequest;
 using ApplicationUpdatePatientRequest = Hospital.Application.Patients.UpdatePatient.UpdatePatientRequest;
 
 namespace Hospital.Api.Contracts.Patients;
@@ -36,6 +38,19 @@ public static class PatientContractMapper
         };
     }
 
+    public static ApplicationSearchPatientsRequest ToApplicationRequest(this SearchPatientsRequest request)
+    {
+        return new ApplicationSearchPatientsRequest
+        {
+            BirthDateSearchGroups = request.BirthDate
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(BirthDateSearchGroupParser.Parse)
+                .ToArray(),
+            Skip = request.Skip,
+            Take = request.Take
+        };
+    }
+
     public static PatientResponse ToResponse(this PatientModel patient)
     {
         return new PatientResponse
@@ -51,6 +66,17 @@ public static class PatientContractMapper
             Gender = ToApiValue(patient.Gender),
             BirthDate = patient.BirthDate,
             Active = patient.Active
+        };
+    }
+
+    public static PagedResponse<PatientResponse> ToResponse(this SearchPatientsResult result)
+    {
+        return new PagedResponse<PatientResponse>
+        {
+            Items = result.Items.Select(ToResponse).ToArray(),
+            TotalCount = result.TotalCount,
+            Skip = result.Skip,
+            Take = result.Take
         };
     }
 

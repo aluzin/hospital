@@ -3,9 +3,11 @@ using Hospital.Api.Contracts.Patients;
 using Hospital.Application.Patients.CreatePatient;
 using Hospital.Application.Patients.DeletePatient;
 using Hospital.Application.Patients.GetPatientById;
+using Hospital.Application.Patients.SearchPatients;
 using Hospital.Application.Patients.UpdatePatient;
 using Microsoft.AspNetCore.Mvc;
 using ApiCreatePatientRequest = Hospital.Api.Contracts.Patients.CreatePatientRequest;
+using ApiSearchPatientsRequest = Hospital.Api.Contracts.Patients.SearchPatientsRequest;
 using ApiUpdatePatientRequest = Hospital.Api.Contracts.Patients.UpdatePatientRequest;
 
 namespace Hospital.Api.Controllers;
@@ -17,17 +19,20 @@ public class PatientsController : ControllerBase
 {
     private readonly ICreatePatientService _createPatientService;
     private readonly IGetPatientByIdService _getPatientByIdService;
+    private readonly ISearchPatientsService _searchPatientsService;
     private readonly IUpdatePatientService _updatePatientService;
     private readonly IDeletePatientService _deletePatientService;
 
     public PatientsController(
         ICreatePatientService createPatientService,
         IGetPatientByIdService getPatientByIdService,
+        ISearchPatientsService searchPatientsService,
         IUpdatePatientService updatePatientService,
         IDeletePatientService deletePatientService)
     {
         _createPatientService = createPatientService;
         _getPatientByIdService = getPatientByIdService;
+        _searchPatientsService = searchPatientsService;
         _updatePatientService = updatePatientService;
         _deletePatientService = deletePatientService;
     }
@@ -50,6 +55,27 @@ public class PatientsController : ControllerBase
         var response = patient.ToResponse();
 
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
+    }
+
+    /// <summary>
+    /// Searches patients with pagination.
+    /// </summary>
+    /// <remarks>
+    /// Supports FHIR-style <c>birthDate</c> filters where repeated parameters are combined with logical AND
+    /// and comma-separated values inside one parameter are combined with logical OR, as well as pagination via
+    /// <c>skip</c>/<c>take</c>.
+    /// </remarks>
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResponse<PatientResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<PagedResponse<PatientResponse>>> Search(
+        [FromQuery] ApiSearchPatientsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _searchPatientsService.ExecuteAsync(request.ToApplicationRequest(), cancellationToken);
+
+        return Ok(result.ToResponse());
     }
 
     /// <summary>

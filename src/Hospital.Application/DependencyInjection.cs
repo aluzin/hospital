@@ -1,6 +1,7 @@
 using Hospital.Application.Patients.CreatePatient;
 using Hospital.Application.Patients.DeletePatient;
 using Hospital.Application.Patients.GetPatientById;
+using Hospital.Application.Patients.SearchPatients;
 using Hospital.Application.Patients.UpdatePatient;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +13,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ICreatePatientService, CreatePatientService>();
         services.AddScoped<IGetPatientByIdService, GetPatientByIdService>();
+        services.AddScoped<ISearchPatientsService, SearchPatientsService>();
         services.AddScoped<IUpdatePatientService, UpdatePatientService>();
         services.AddScoped<IDeletePatientService, DeletePatientService>();
 
