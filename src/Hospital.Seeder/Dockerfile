@@ -10,7 +10,7 @@ COPY . .
 
 RUN dotnet publish "src/Hospital.Seeder/Hospital.Seeder.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/runtime:6.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
 WORKDIR /app
 
 COPY --from=build /app/publish .
