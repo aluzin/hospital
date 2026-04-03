@@ -1,10 +1,13 @@
 using Hospital.Domain.Entities;
+using Hospital.Application.Abstractions.Persistence;
 using Hospital.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 
 namespace Hospital.IntegrationTests.TestInfrastructure;
@@ -17,12 +20,14 @@ public sealed class HospitalApiFactory : WebApplicationFactory<Program>, IAsyncL
         .WithUsername("postgres")
         .WithPassword("postgres")
         .Build();
+    private string _databaseConnectionString = string.Empty;
 
     public HttpClient Client { get; private set; } = null!;
 
     public async Task InitializeAsync()
     {
         await _databaseContainer.StartAsync();
+        _databaseConnectionString = _databaseContainer.GetConnectionString();
 
         Client = CreateClient(new WebApplicationFactoryClientOptions
         {
@@ -64,8 +69,22 @@ public sealed class HospitalApiFactory : WebApplicationFactory<Program>, IAsyncL
         {
             configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:HospitalDatabase"] = _databaseContainer.GetConnectionString(),
+                ["ConnectionStrings:HospitalDatabase"] = _databaseConnectionString,
                 ["Database:MigrateOnStartup"] = "true"
+            });
+        });
+        builder.ConfigureServices(services =>
+        {
+            services.RemoveAll(typeof(DbContextOptions<HospitalDbContext>));
+            services.RemoveAll(typeof(HospitalDbContext));
+            services.RemoveAll(typeof(IHospitalDbContext));
+
+            services.AddDbContext<HospitalDbContext>(options => options.UseNpgsql(_databaseConnectionString));
+            services.AddScoped<IHospitalDbContext>(provider => provider.GetRequiredService<HospitalDbContext>());
+            services.PostConfigure<DatabaseOptions>(options =>
+            {
+                options.ConnectionString = _databaseConnectionString;
+                options.MigrateOnStartup = true;
             });
         });
     }
