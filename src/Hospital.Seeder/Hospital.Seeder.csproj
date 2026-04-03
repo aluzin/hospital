@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Hospital.Api\Hospital.Api.csproj" />
+  </ItemGroup>
+
 </Project>
