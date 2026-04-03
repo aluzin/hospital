@@ -1,0 +1,49 @@
+name: hospital
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: hospital
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - hospital_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hospital"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Hospital.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__HospitalDatabase: Host=db;Port=5432;Database=hospital;Username=postgres;Password=postgres
+      Database__MigrateOnStartup: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      - hospital_logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+
+  seeder:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: src/Hospital.Seeder/Dockerfile
+    environment:
+      API_BASE_URL: http://api:8080
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  hospital_pg:
+  hospital_logs:
