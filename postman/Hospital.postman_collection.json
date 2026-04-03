@@ -1,0 +1,327 @@
+{
+  "info": {
+    "_postman_id": "9d3d730e-48c3-4b58-b261-eef2fd9eea43",
+    "name": "Hospital API",
+    "description": "Collection for demonstrating Patient CRUD and FHIR-style birthDate search.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "patientId",
+      "value": ""
+    },
+    {
+      "key": "nameId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Create Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var body = pm.response.json();",
+                  "pm.collectionVariables.set(\"patientId\", body.id);",
+                  "pm.collectionVariables.set(\"nameId\", body.name.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": {\n    \"use\": \"official\",\n    \"family\": \"Иванов\",\n    \"given\": [\n      \"Иван\",\n      \"Иванович\"\n    ]\n  },\n  \"gender\": \"male\",\n  \"birthDate\": \"2024-01-13T18:25:43Z\",\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/patients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients"
+              ]
+            },
+            "description": "Creates a patient and stores patientId/nameId to collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient By Id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/{{patientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ]
+            },
+            "description": "Reads the patient captured by the create request."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var body = pm.response.json();",
+                  "pm.collectionVariables.set(\"nameId\", body.name.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": {\n    \"id\": \"{{nameId}}\",\n    \"use\": \"usual\",\n    \"family\": \"Петров\",\n    \"given\": [\n      \"Петр\",\n      \"Петрович\"\n    ]\n  },\n  \"gender\": \"other\",\n  \"birthDate\": \"2024-02-01T10:00:00Z\",\n  \"active\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/{{patientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ]
+            },
+            "description": "Updates the patient captured by the create request."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/{{patientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ]
+            },
+            "description": "Deletes the patient captured by the create request."
+          },
+          "response": []
+        },
+        {
+          "name": "Search BirthDate Eq",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients?birthDate=eq2024-01-13",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "birthDate",
+                  "value": "eq2024-01-13"
+                }
+              ]
+            },
+            "description": "FHIR eq search for one day."
+          },
+          "response": []
+        },
+        {
+          "name": "Search BirthDate Range And",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients?birthDate=ge2024-01-13&birthDate=lt2024-01-14",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "birthDate",
+                  "value": "ge2024-01-13"
+                },
+                {
+                  "key": "birthDate",
+                  "value": "lt2024-01-14"
+                }
+              ]
+            },
+            "description": "FHIR AND search with repeated birthDate parameters."
+          },
+          "response": []
+        },
+        {
+          "name": "Search BirthDate Or",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients?birthDate=eq2024-01-12,eq2024-01-14",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "birthDate",
+                  "value": "eq2024-01-12,eq2024-01-14"
+                }
+              ]
+            },
+            "description": "FHIR OR search with comma-separated birthDate values."
+          },
+          "response": []
+        },
+        {
+          "name": "Search BirthDate And Or With Pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients?birthDate=eq2024-01-12,eq2024-01-13&birthDate=eq2024-01-13,eq2024-01-14&skip=0&take=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "birthDate",
+                  "value": "eq2024-01-12,eq2024-01-13"
+                },
+                {
+                  "key": "birthDate",
+                  "value": "eq2024-01-13,eq2024-01-14"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "take",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Combined FHIR AND/OR search with pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "Search BirthDate Approximate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients?birthDate=ap2024-01-13",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "birthDate",
+                  "value": "ap2024-01-13"
+                }
+              ]
+            },
+            "description": "FHIR approximate date search."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
